@@ -1,47 +1,70 @@
-# Make Hidden
-A VS Code plugin that provides more control over your excluded items in your "Project Directory". Perform show/hide actions on file/folders right from the context menu and keep track of these in their own window view pane. Save bulk excluded items in workspaces to quickly toggle between them.
+# Focus README
 
-### Features
-#### Added context menu actions
--  **Hide**: Design to simply hide/exclude a file and or folder from the project directory.
--  **Hide Many**: Hide multiple items that match a chosen ***Name*** and or ***File extension***. The directory level can also be configured from where the exclusion happens. Wherever that be at the root level or at the level of which the item was selected at or below.
--  **Show only**: Hide all items within the current directory, except selected.
--  **Undo Last**: Op's, rewind to last given excluded items state.
+This is the README for your extension "Focus". After writing up a brief description, we recommend including the following sections.
 
-#### Other
--  **Hidden Items View Pane**: Shows all hidden/excluded files and folder, these can also be added back into the current directory by selecting one.
--  **Workspaces**: Workspaces allow you to save excluded items presets so that they can be applied/loaded again easily.
+## Features
 
-# Usage
-### Hide
-Right click on a file or folder in the projects directory. Then select **`Hide`** to exclude that item rendering it invisible.
+Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
-![Preview](resources/showcase-hide.gif)
+For example if there is an image subfolder under your extension project workspace:
 
-### Hide Many
-Right click on a file or folder in the projects directory. Then select **`Hide Many`** and you will be presented with the following options:
+\!\[feature X\]\(images/feature-x.png\)
 
-**First Options**
-1. **By name**: Hide all items that match the selected items name.
-2. **By extension**: To only target & exclude items with the corresponding extension.
+> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
-**Second Options**
-1. **From root**: Hide all files/folders from the root.
-2. **From current directory**: Hide all from the directory the ite is in.
-3. **From current & child directories**: Hide all matching items from the directory the item is in and all child.
-4. **Child directories only**: Will hide all files/folders from the root.
+## Requirements
 
-![Preview](resources/showcase-hideMany.gif)
+If you have any requirements or dependencies, add a section describing those and how to install and configure them.
 
-### Show Only
-Will keep the selected item(file/folder) and hide all other items in the same directory.
+## Extension Settings
 
-![Preview](resources/showcase-showOnly.gif)
+Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
 
-## View Pane Hidden Items
-The Hidden Items view pane enables you to see regex codes that are applied to the current directory that are hiding items. From here, you can also create, load and delete workspaces.
+For example:
 
-![Preview](resources/showcase-viewPane-hiddenItems.png)
+This extension contributes the following settings:
 
-## License
-[MIT](LICENSE.md)
+* `myExtension.enable`: enable/disable this extension
+* `myExtension.thing`: set to `blah` to do something
+
+## Known Issues
+
+Calling out known issues can help limit users opening duplicate issues against your extension.
+
+## Release Notes
+
+Users appreciate release notes as you update your extension.
+
+### 1.0.0
+
+Initial release of ...
+
+### 1.0.1
+
+Fixed issue #.
+
+### 1.1.0
+
+Added features X, Y, and Z.
+
+-----------------------------------------------------------------------------------------------------------
+## Following extension guidelines
+
+Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+
+* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+
+## Working with Markdown
+
+**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
+
+* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
+* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
+* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
+
+### For more information
+
+* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
+* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+
+**Enjoy!**
