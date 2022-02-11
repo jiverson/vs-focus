@@ -61,11 +61,11 @@ export class ItemStore {
    * Remove regex from config list
    * When removing an item it will be placed back into the directory
    */
-  public removeItem(itemKey: string = null): Promise<any> {
+  public removeItem(itemKey: string | null = null): Promise<any> {
     return new Promise((resolve, reject) => {
       this.get()
         .then((store: any) => {
-          if (store[itemKey]) {
+          if (itemKey && (store[itemKey] as any)) {
             delete store[itemKey];
             this.set(store).then(() => resolve(store));
           }

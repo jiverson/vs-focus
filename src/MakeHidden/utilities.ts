@@ -9,7 +9,7 @@ let VS_CODE_CONTEXT: any = null;
 const HOME_DIR: string = os.homedir();
 const PROJECTS_FILE: string = "MakeHidden.json";
 
-export function setVsCodeContext(context) {
+export function setVsCodeContext(context: vscode.ExtensionContext) {
   VS_CODE_CONTEXT = context;
 }
 
@@ -61,7 +61,7 @@ export function getVsCodeCurrentPath() {
 
 /* --------------------
  */
-export function getPathInfoFromPath(givenPath: string = null): {} {
+export function getPathInfoFromPath(givenPath: string): {} {
   let extension: string = path.extname(givenPath);
   let pathName: string = path.basename(givenPath);
   return {
@@ -75,7 +75,7 @@ export function getPathInfoFromPath(givenPath: string = null): {} {
 
 /* --------------------
  */
-export function getAllItemsInDir(directory: string = "./") {
+export function getAllItemsInDir(directory = "./") {
   var files = fs.readdirSync(directory);
   return files;
 }
@@ -90,13 +90,13 @@ export function getProjectThemeDirectory(fileName: string) {
 
 /* --------------------
  */
-export function getVscodeSettingPath(pathType: string = null) {
+export function getVscodeSettingPath(pathType?: string) {
   let path: string = `${getVsCodeCurrentPath()}/.vscode/settings.json`;
-  let pathInfo = getPathInfoFromPath(path);
+  let pathInfo = getPathInfoFromPath(path) as any;
   pathInfo["full"] = path;
 
   if (pathInfo.hasOwnProperty(pathType)) {
-    return pathInfo[pathType];
+    return pathInfo[pathType as any];
   }
 
   return pathInfo;
@@ -111,10 +111,10 @@ export function createPluginSettingsJson(): void {
 
   vscode.window
     .showInformationMessage(noticeText, grantedText)
-    .then((selection: string) => {
+    .then((selection?: string) => {
       if (selection === grantedText) {
         let path: string = getExtensionSettingPath();
-        const info = getPathInfoFromPath(path);
+        const info = getPathInfoFromPath(path) as any;
         info["full"] = path;
 
         fs.mkdir(info["path"], (e) => {
@@ -140,9 +140,9 @@ export function createVscodeSettingJson(): void {
 
   vscode.window
     .showInformationMessage(noticeText, grantedText)
-    .then((selection: string) => {
+    .then((selection?: string) => {
       if (selection === grantedText) {
-        const info = getVscodeSettingPath();
+        const info = getVscodeSettingPath() as any;
 
         fs.mkdir(info["path"], (e) => {
           fs.writeFile(info["full"], `{}`, (err) => {
@@ -160,6 +160,6 @@ export function createVscodeSettingJson(): void {
 
 /* --------------------
  */
-export function fileExists(filePath: string = "") {
+export function fileExists(filePath = "") {
   return fs.existsSync(filePath);
 }

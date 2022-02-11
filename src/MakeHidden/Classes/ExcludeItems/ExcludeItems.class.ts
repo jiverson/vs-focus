@@ -68,7 +68,7 @@ export default class ExcludeItems {
    * Have done this here as i think it will be good when
    * formatting the list, e.g by file type(.exe) name acs/desc
    */
-  public getHiddenItemList(): Promise<String[]> {
+  public getHiddenItemList(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       this.store.get().then((store: ExcludeItemsObject) => {
         // quick cheep way to get the as string[] might want to check in future
@@ -85,19 +85,21 @@ export default class ExcludeItems {
   public hide(relativePath: string): void {
     this.store
       .addItem(relativePath, true)
-      .then((store: ExcludeItemsObject) => this.onListUpdate());
+      .then((store: any) => this.onListUpdate());
   }
 
   /* --------------------
    * Will hide an item from the projects directory
    */
   public hideMany(
-    relativePath: string = null,
-    includeExtension: boolean = false,
-    hideLevelIndex: number = 0
+    relativePath: string | null = null,
+    includeExtension = false,
+    hideLevelIndex = 0
   ) {
     this.store.get().then((filesExcludeObject: ExcludeItemsObject) => {
-      let itemPathProps: DirectoryPathInfo = DirectoryPathInfo(relativePath);
+      let itemPathProps: DirectoryPathInfo = DirectoryPathInfo(
+        relativePath as string
+      );
       let excludeSnippets: RegexExcluder = this.buildExcludeRegex(
         relativePath,
         hideLevelIndex
@@ -122,14 +124,14 @@ export default class ExcludeItems {
   /* --------------------
    * Will hide an item from the projects directory
    */
-  public showOnly(relativePath: string = null) {
+  public showOnly(relativePath: string | null = null) {
     this.showOnlyFilterer(relativePath, 1);
   }
 
   /* --------------------
    * TODO:: Need to Refactor to own class
    */
-  private showOnlyFilterer(itemPath: string = null, hideLevel: number = 0) {
+  private showOnlyFilterer(itemPath: string | null = null, hideLevel = 0) {
     if (itemPath) {
       let targetFilePathProps: any = Util.getPathInfoFromPath(itemPath);
       let workspacePath: any = Util.getVsCodeCurrentPath();
@@ -152,9 +154,11 @@ export default class ExcludeItems {
           let checks = {
             // Hide with opposite Names & Extension
             isDifferentName:
+              // eslint-disable-next-line eqeqeq
               targetFilePathProps["filename"] !=
               thisFileNamePathProps["filename"],
             isDifferentExtension:
+              // eslint-disable-next-line eqeqeq
               targetFilePathProps["extension"] !=
               thisFileNamePathProps["extension"],
           };
@@ -214,11 +218,11 @@ export default class ExcludeItems {
    * TODO:: Need to Refactor to own class
    */
   private buildExcludeRegex(
-    itemPath: string = null,
-    hideLevelIndex: number = 0
+    itemPath: string | null = null,
+    hideLevelIndex = 0
   ): RegexExcluder {
     let hideLevelObject: any = this.getHideLevelByIndex(hideLevelIndex);
-    let itemPathProps: any = Util.getPathInfoFromPath(itemPath);
+    let itemPathProps: any = Util.getPathInfoFromPath(itemPath as string);
     let excludeSnippet: string = `${hideLevelObject.regexCode}`;
 
     // Check to see if to add item path
@@ -237,8 +241,8 @@ export default class ExcludeItems {
   /* --------------------
    * TODO:: Need to Refactor to own class
    */
-  private getHideLevelByIndex(hideLevelIndex: number = 0): HideLevelObject {
-    const hideLevels: string[] = ["root", "current", "current&below", "below"];
+  private getHideLevelByIndex(hideLevelIndex = 0): HideLevelObject {
+    const hideLevels = ["root", "current", "current&below", "below"] as const;
     const hideLevelsObject: HideLevelsObject = {
       root: { regexCode: "**/", incRelativePath: false },
       current: { regexCode: "*", incRelativePath: true },
@@ -246,7 +250,7 @@ export default class ExcludeItems {
       below: { regexCode: "*/", incRelativePath: true },
     };
 
-    let hideLevelKey: string = hideLevels[hideLevelIndex];
+    let hideLevelKey = hideLevels[hideLevelIndex];
     let hideLevel: HideLevelObject = hideLevelsObject[hideLevelKey];
     return hideLevel;
   }

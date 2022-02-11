@@ -158,7 +158,6 @@
   },
   "dependencies": {
     "fs-readfile-promise": "^3.0.1",
-    "jsonc-parser": "^0.4.2",
-    "rxjs": "^6.4.0"
+    "jsonc-parser": "^0.4.2"
   }
 }

@@ -30,7 +30,7 @@ export default class ExcludeItemsViewPane implements TreeDataProvider<Node> {
   /* --------------------
    * Register a view pane with vs code view: showing the excluded items
    */
-  private register(name: string = "") {
+  private register(name = "") {
     window.registerTreeDataProvider(name, this);
   }
 
@@ -49,14 +49,14 @@ export default class ExcludeItemsViewPane implements TreeDataProvider<Node> {
   public update(list: string[]): void {
     let treeString: string = JSON.stringify(list);
     this.tree = parseTree(treeString);
-    this.viewUpdatedEventEmitter.fire();
+    this.viewUpdatedEventEmitter.fire(null);
   }
 
   /* --------------------
    * vscode function to render items to view
    */
   public getChildren(): Thenable<Node[]> {
-    return Promise.resolve(this.tree.children);
+    return Promise.resolve(this.tree.children as Node[]);
   }
 
   /* --------------------

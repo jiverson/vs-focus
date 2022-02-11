@@ -36,9 +36,14 @@ export function activate(context: vscode.ExtensionContext) {
 
         let chosenFilePath: string = e.fsPath;
         fs.lstat(chosenFilePath, (err, stats) => {
-          if (err) return;
+          if (err) {
+            return;
+          }
 
-          let relativePath: string = path.relative(ROOT_PATH, chosenFilePath);
+          let relativePath: string = path.relative(
+            ROOT_PATH as string,
+            chosenFilePath
+          );
           let fileName: string = path.basename(e.fsPath);
           var extension: string = path.extname(fileName);
           var file: string = path.basename(fileName, extension);
@@ -51,8 +56,9 @@ export function activate(context: vscode.ExtensionContext) {
 
             case "hideMany": {
               let hideByOptions: string[] = [`By Name: ${file}`];
-              if (stats.isFile())
-                hideByOptions.push(`By Extension: ${extension}`); // Allow matching extension on files
+              if (stats.isFile()) {
+                hideByOptions.push(`By Extension: ${extension}`);
+              } // Allow matching extension on files
               let hideLevelOptions: string[] = [
                 `From root`,
                 `From current directory`,
@@ -62,14 +68,17 @@ export function activate(context: vscode.ExtensionContext) {
 
               vscode.window
                 .showQuickPick(hideByOptions)
-                .then((hideBySelection: string) => {
+                .then((hideBySelection?: string) => {
                   let hideByType: boolean =
-                    hideByOptions.indexOf(hideBySelection) > 0 ? true : false;
+                    hideByOptions.indexOf(hideBySelection as string) > 0
+                      ? true
+                      : false;
                   vscode.window
                     .showQuickPick(hideLevelOptions)
-                    .then((val: string) => {
-                      let hideLevelIndex: number =
-                        hideLevelOptions.indexOf(val);
+                    .then((val?: string) => {
+                      let hideLevelIndex: number = hideLevelOptions.indexOf(
+                        val as string
+                      );
                       excludeItems.hideMany(
                         relativePath,
                         hideByType,
@@ -106,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
               excludeItems.getHiddenItemList().then((excludeList: any) => {
                 vscode.window
                   .showQuickPick(excludeList)
-                  .then((excludeString: string) => {
+                  .then((excludeString?: string) => {
                     if (excludeString) {
                       excludeItems.makeVisible(excludeString);
                       // TODO: Don't like this fix as it runs before promise showing old list
@@ -125,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             case "removeItem": {
               if (
-                typeof excludeString == "string" &&
+                typeof excludeString === "string" &&
                 excludeString.length > 0
               ) {
                 excludeItems.makeVisible(excludeString);
@@ -167,9 +176,10 @@ export function activate(context: vscode.ExtensionContext) {
             let workspacesNames: string[] = [];
 
             workspaceIds.map((id: string, i: number) => {
-              let workspace: Workspace = workspaces[id];
+              let workspace: Workspace = workspaces[id as any];
               let path: string = workspace.path;
 
+              // eslint-disable-next-line eqeqeq
               if (path == null || path == Util.getVsCodeCurrentPath()) {
                 let label: string =
                   `${workspace.name}` + (path === null ? " •" : "");
@@ -187,22 +197,26 @@ export function activate(context: vscode.ExtensionContext) {
                     "Close",
                   ])
                   .then((choice) => {
-                    if (choice === "Close" || choice === undefined) return;
+                    if (choice === "Close" || choice === undefined) {
+                      return;
+                    }
                     vscode.window
                       .showInputBox({ prompt: "Name of Workspace" })
-                      .then((workspaceName: string) => {
-                        if (workspaceName === undefined) return;
+                      .then((workspaceName?: string) => {
+                        if (workspaceName === undefined) {
+                          return;
+                        }
                         excludeItems
                           .getHiddenItemList()
                           .then((excludeItems: string[]) => {
-                            let type: string =
+                            let type: string | null | undefined =
                               choice === "Globally"
                                 ? null
                                 : Util.getVsCodeCurrentPath();
                             workspaceManager.create(
                               workspaceName,
                               excludeItems,
-                              type
+                              type as string
                             );
                           });
                       });
@@ -213,11 +227,13 @@ export function activate(context: vscode.ExtensionContext) {
               case "workspace.load": {
                 vscode.window
                   .showQuickPick(workspacesNames)
-                  .then((val: string) => {
-                    if (val === "Close" || val === undefined) return;
+                  .then((val?: string) => {
+                    if (val === "Close" || val === undefined) {
+                      return;
+                    }
                     let chosenWorkspaceId =
                       workspaceIds[workspacesNames.indexOf(val)];
-                    let chosenWorkspace = workspaces[chosenWorkspaceId];
+                    let chosenWorkspace = workspaces[chosenWorkspaceId as any];
                     excludeItems.loadExcludedList(
                       chosenWorkspace["excludedItems"]
                     );
@@ -228,8 +244,10 @@ export function activate(context: vscode.ExtensionContext) {
               case "workspace.delete": {
                 vscode.window
                   .showQuickPick(workspacesNames)
-                  .then((val: string) => {
-                    if (val === "Close" || val === undefined) return;
+                  .then((val?: string) => {
+                    if (val === "Close" || val === undefined) {
+                      return;
+                    }
                     let chosenWorkspaceId =
                       workspaceIds[workspacesNames.indexOf(val)];
                     workspaceManager.removeById(chosenWorkspaceId);

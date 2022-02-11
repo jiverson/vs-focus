@@ -11,7 +11,7 @@ export interface Workspace {
 
 export class Workspaces {
   store: ItemStore;
-  workspaces: Workspace[];
+  workspaces: Workspace[] | undefined;
 
   constructor(settingPath: string = Util.getExtensionSettingPath()) {
     this.store = new ItemStore(settingPath, `workspaces`);
@@ -33,7 +33,7 @@ export class Workspaces {
    * Creates & Saves a new workspace object
    */
   public create(
-    name: string = null,
+    name: string | null = null,
     excludedItems: any = null,
     path: string = "global"
   ) {
@@ -43,16 +43,14 @@ export class Workspaces {
         path,
         excludedItems
       );
-      this.store
-        .addItem(workspace.id, workspace)
-        .then((workspaces: Workspace[]) => {});
+      this.store.addItem(workspace.id, workspace).then((workspaces: any) => {});
     }
   }
 
   /* --------------------
    * Removes a given workspace by id
    */
-  public removeById(id: string = null) {
+  public removeById(id: string | null = null) {
     this.store.removeItem(id).then(() => {});
   }
 
