@@ -1,4 +1,3 @@
-/* -- Make hidden lib's -- */
 import * as Util from "../../utilities";
 import { DirectoryPathInfo } from "../../Service/DirectoryPathInfo";
 
@@ -25,8 +24,8 @@ interface HideLevelsObject {
 }
 
 interface HideLevelObject {
-  regexCode: String;
-  incRelativePath: Boolean;
+  regexCode: string;
+  incRelativePath: boolean;
 }
 
 export default class ExcludeItems {

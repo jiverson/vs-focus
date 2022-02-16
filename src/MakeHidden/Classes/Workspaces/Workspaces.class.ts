@@ -1,4 +1,3 @@
-/* -- Third party import's -- */
 import * as Util from "../../utilities";
 import { ItemStore } from "../ItemStore/ItemStore.class";
 

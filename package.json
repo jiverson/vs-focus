@@ -23,7 +23,7 @@
     "onCommand:make-hidden.workspace.load",
     "onCommand:make-hidden.workspace.delete"
   ],
-  "main": "./out/src/extension",
+  "main": "./out/extension.js",
   "contributes": {
     "views": {
       "explorer": [
@@ -157,7 +157,6 @@
     "@vscode/test-electron": "^2.0.3"
   },
   "dependencies": {
-    "fs-readfile-promise": "^3.0.1",
     "jsonc-parser": "^0.4.2"
   }
 }

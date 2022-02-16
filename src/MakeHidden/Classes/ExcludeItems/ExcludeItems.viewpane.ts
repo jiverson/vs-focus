@@ -1,4 +1,3 @@
-/* -- Make hidden lib's -- */
 import * as Util from "../../utilities";
 import { Node, parseTree } from "jsonc-parser";
 import {

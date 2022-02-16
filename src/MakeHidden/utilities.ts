@@ -1,4 +1,3 @@
-"use strict";
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
@@ -6,8 +5,8 @@ import * as os from "os";
 import * as process from "process";
 
 let VS_CODE_CONTEXT: any = null;
-const HOME_DIR: string = os.homedir();
-const PROJECTS_FILE: string = "MakeHidden.json";
+const HOME_DIR = os.homedir();
+const PROJECTS_FILE = "MakeHidden.json";
 
 export function setVsCodeContext(context: vscode.ExtensionContext) {
   VS_CODE_CONTEXT = context;
@@ -24,7 +23,7 @@ export function getExtensionSettingPath(): string {
       : "/var/local");
 
   // TODO: find out more about this
-  const channelPath: string = "Code";
+  const channelPath = "Code";
   // const channelPath: string = this.getChannelPath();
 
   projectFile = path.join(appData, channelPath, "User", PROJECTS_FILE);
