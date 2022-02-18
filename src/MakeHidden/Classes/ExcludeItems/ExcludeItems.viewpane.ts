@@ -46,7 +46,7 @@ export default class ExcludeItemsViewPane implements TreeDataProvider<Node> {
    * Updates the view pane item list
    */
   public update(list: string[]): void {
-    let treeString: string = JSON.stringify(list);
+    const treeString: string = JSON.stringify(list);
     this.tree = parseTree(treeString);
     this.viewUpdatedEventEmitter.fire(null);
   }
@@ -62,9 +62,9 @@ export default class ExcludeItemsViewPane implements TreeDataProvider<Node> {
    * vscode function, Pass our tree node item object to vs code
    */
   public getTreeItem(node: Node): TreeItem {
-    let itemTitle: string = node.value;
+    const itemTitle: string = node.value;
 
-    let treeItem: TreeItem = new TreeItem(
+    const treeItem: TreeItem = new TreeItem(
       itemTitle,
       TreeItemCollapsibleState.None
     );

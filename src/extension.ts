@@ -9,7 +9,7 @@ import {
 } from "./MakeHidden/Classes/Workspaces/Workspaces.class";
 
 // Const
-const ROOT_PATH = vscode.workspace.rootPath;
+const workspaceFolders = vscode.workspace.workspaceFolders;
 const PLUGIN_NAME = "MakeHidden";
 
 /* --------------------
@@ -27,26 +27,28 @@ export function activate(context: vscode.ExtensionContext) {
    * Hide Cmd's
    */
   ["hide", "hideMany", "showOnly"].forEach((cmd: string) => {
-    let registerCommand = vscode.commands.registerCommand(
+    const registerCommand = vscode.commands.registerCommand(
       `make-hidden.${cmd}`,
-      (e: any) => {
+      (e: { fsPath: string }) => {
         if (!settingsFileExists() && !e.fsPath) {
           return;
         }
 
-        let chosenFilePath: string = e.fsPath;
+        const chosenFilePath = e.fsPath;
+
         fs.lstat(chosenFilePath, (err, stats) => {
-          if (err) {
+          if (err || !workspaceFolders?.length) {
             return;
           }
 
-          let relativePath: string = path.relative(
-            ROOT_PATH as string,
-            chosenFilePath
-          );
-          let fileName: string = path.basename(e.fsPath);
-          var extension: string = path.extname(fileName);
-          var file: string = path.basename(fileName, extension);
+          const {
+            uri: { path: rootPath },
+          } = workspaceFolders[0];
+
+          const relativePath = path.relative(rootPath, chosenFilePath);
+          const fileName = path.basename(e.fsPath);
+          const extension = path.extname(fileName);
+          const file = path.basename(fileName, extension);
 
           switch (cmd) {
             case "hide": {
@@ -55,11 +57,14 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             case "hideMany": {
-              let hideByOptions: string[] = [`By Name: ${file}`];
+              const hideByOptions = [`By Name: ${file}`];
+
               if (stats.isFile()) {
                 hideByOptions.push(`By Extension: ${extension}`);
-              } // Allow matching extension on files
-              let hideLevelOptions: string[] = [
+              }
+
+              // Allow matching extension on files
+              const hideLevelOptions = [
                 `From root`,
                 `From current directory`,
                 `From current & child directories`,
@@ -69,14 +74,13 @@ export function activate(context: vscode.ExtensionContext) {
               vscode.window
                 .showQuickPick(hideByOptions)
                 .then((hideBySelection?: string) => {
-                  let hideByType: boolean =
-                    hideByOptions.indexOf(hideBySelection as string) > 0
-                      ? true
-                      : false;
+                  const hideByType =
+                    hideByOptions.indexOf(hideBySelection as string) > 0;
+
                   vscode.window
                     .showQuickPick(hideLevelOptions)
                     .then((val?: string) => {
-                      let hideLevelIndex: number = hideLevelOptions.indexOf(
+                      const hideLevelIndex = hideLevelOptions.indexOf(
                         val as string
                       );
                       excludeItems.hideMany(
@@ -107,7 +111,7 @@ export function activate(context: vscode.ExtensionContext) {
    */
   ["removeSearch", "removeItem", "removeAllItems", "undo"].forEach(
     (cmd: string) => {
-      let registerCommand = vscode.commands.registerCommand(
+      const registerCommand = vscode.commands.registerCommand(
         `make-hidden.${cmd}`,
         (excludeString: string) => {
           switch (cmd) {
@@ -164,7 +168,7 @@ export function activate(context: vscode.ExtensionContext) {
    */
   ["workspace.create", "workspace.load", "workspace.delete"].forEach(
     (cmd: string) => {
-      let registerCommand = vscode.commands.registerCommand(
+      const registerCommand = vscode.commands.registerCommand(
         `make-hidden.${cmd}`,
         () => {
           if (!pluginSettingsJson()) {
@@ -172,16 +176,16 @@ export function activate(context: vscode.ExtensionContext) {
           }
 
           workspaceManager.getWorkspaces().then((workspaces: Workspace[]) => {
-            let workspaceIds: string[] = Object.keys(workspaces);
-            let workspacesNames: string[] = [];
+            const workspaceIds: string[] = Object.keys(workspaces);
+            const workspacesNames: string[] = [];
 
-            workspaceIds.map((id: string, i: number) => {
-              let workspace: Workspace = workspaces[id as any];
-              let path: string = workspace.path;
+            workspaceIds.map((id: string) => {
+              const workspace: Workspace = workspaces[id as any];
+              const path: string = workspace.path;
 
               // eslint-disable-next-line eqeqeq
               if (path == null || path == Util.getVsCodeCurrentPath()) {
-                let label: string =
+                const label: string =
                   `${workspace.name}` + (path === null ? " •" : "");
                 workspacesNames.push(label);
               }
@@ -209,7 +213,7 @@ export function activate(context: vscode.ExtensionContext) {
                         excludeItems
                           .getHiddenItemList()
                           .then((excludeItems: string[]) => {
-                            let type: string | null | undefined =
+                            const type: string | null | undefined =
                               choice === "Globally"
                                 ? null
                                 : Util.getVsCodeCurrentPath();
@@ -231,9 +235,10 @@ export function activate(context: vscode.ExtensionContext) {
                     if (val === "Close" || val === undefined) {
                       return;
                     }
-                    let chosenWorkspaceId =
+                    const chosenWorkspaceId =
                       workspaceIds[workspacesNames.indexOf(val)];
-                    let chosenWorkspace = workspaces[chosenWorkspaceId as any];
+                    const chosenWorkspace =
+                      workspaces[chosenWorkspaceId as any];
                     excludeItems.loadExcludedList(
                       chosenWorkspace["excludedItems"]
                     );
@@ -248,7 +253,7 @@ export function activate(context: vscode.ExtensionContext) {
                     if (val === "Close" || val === undefined) {
                       return;
                     }
-                    let chosenWorkspaceId =
+                    const chosenWorkspaceId =
                       workspaceIds[workspacesNames.indexOf(val)];
                     workspaceManager.removeById(chosenWorkspaceId);
                   });
@@ -263,28 +268,31 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export function deactivate() {}
 
 function pluginSettingsJson(): boolean {
-  const codeSettingsFileExists: boolean = Util.fileExists(
+  const codeSettingsFileExists = Util.fileExists(
     `${Util.getExtensionSettingPath()}`
   );
+
   if (codeSettingsFileExists) {
     return true;
-  } else {
-    Util.createPluginSettingsJson();
-    return false;
   }
+
+  Util.createPluginSettingsJson();
+  return false;
 }
 
 function settingsFileExists(): boolean {
-  const codeSettingsFileExists: boolean = Util.fileExists(
+  const codeSettingsFileExists = Util.fileExists(
     `${Util.getVsCodeCurrentPath()}/.vscode/settings.json`
   );
+
   if (codeSettingsFileExists) {
     return true;
-  } else {
-    Util.createVscodeSettingJson();
-    return false;
   }
+
+  Util.createVscodeSettingJson();
+  return false;
 }

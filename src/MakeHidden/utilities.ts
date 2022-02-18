@@ -12,14 +12,12 @@ export function setVsCodeContext(context: vscode.ExtensionContext) {
   VS_CODE_CONTEXT = context;
 }
 
-/* --------------------
- */
 export function getExtensionSettingPath(): string {
   let projectFile: string;
   const appData =
     process.env.APPDATA ||
     (process.platform === "darwin"
-      ? process.env.HOME + "/Library/Application Support"
+      ? `${process.env.HOME}/Library/Application Support`
       : "/var/local");
 
   // TODO: find out more about this
@@ -42,58 +40,46 @@ export function getExtensionSettingPath(): string {
   return projectFile;
 }
 
-/* --------------------
- */
 export function getChannelPath(): string {
   if (vscode.env.appName.indexOf("Insiders") > 0) {
     return "Code - Insiders";
-  } else {
-    return "Code";
   }
+
+  return "Code";
 }
 
-/* --------------------
- */
 export function getVsCodeCurrentPath() {
   return vscode.workspace.rootPath;
 }
 
-/* --------------------
- */
-export function getPathInfoFromPath(givenPath: string): {} {
-  let extension: string = path.extname(givenPath);
-  let pathName: string = path.basename(givenPath);
+export function getPathInfoFromPath(givenPath: string): any {
+  const extension = path.extname(givenPath);
+  const pathName = path.basename(givenPath);
   return {
     basename: pathName,
     filename:
       extension === "" ? pathName : pathName.slice(0, -extension.length),
-    extension: extension,
+    extension,
     path: givenPath.slice(0, -pathName.length),
   };
 }
 
-/* --------------------
- */
 export function getAllItemsInDir(directory = "./") {
-  var files = fs.readdirSync(directory);
-  return files;
+  return fs.readdirSync(directory);
 }
 
-/* --------------------
- */
 export function getProjectThemeDirectory(fileName: string) {
   return VS_CODE_CONTEXT.asAbsolutePath(
     path.join("resources", "light", fileName)
   );
 }
 
-/* --------------------
- */
 export function getVscodeSettingPath(pathType?: string) {
-  let path: string = `${getVsCodeCurrentPath()}/.vscode/settings.json`;
-  let pathInfo = getPathInfoFromPath(path) as any;
+  const path = `${getVsCodeCurrentPath()}/.vscode/settings.json`;
+  const pathInfo = getPathInfoFromPath(path) as any;
   pathInfo["full"] = path;
 
+  // eslint-disable-next-line no-prototype-builtins
   if (pathInfo.hasOwnProperty(pathType)) {
     return pathInfo[pathType as any];
   }
@@ -101,18 +87,16 @@ export function getVscodeSettingPath(pathType?: string) {
   return pathInfo;
 }
 
-/* --------------------
- * Create vc setting.json directory
- */
 export function createPluginSettingsJson(): void {
-  let noticeText: string = `Plugin MakeHidden requires a 'MakeHidden.json' file, would you like to create now?`;
-  let grantedText: string = "One Time Create";
+  const noticeText =
+    "Plugin MakeHidden requires a 'MakeHidden.json' file, would you like to create now?";
+  const grantedText = "One Time Create";
 
   vscode.window
     .showInformationMessage(noticeText, grantedText)
     .then((selection?: string) => {
       if (selection === grantedText) {
-        let path: string = getExtensionSettingPath();
+        const path = getExtensionSettingPath();
         const info = getPathInfoFromPath(path) as any;
         info["full"] = path;
 
@@ -120,7 +104,7 @@ export function createPluginSettingsJson(): void {
           fs.writeFile(info["full"], `{}`, (err) => {
             if (err) {
               vscode.window.showInformationMessage(
-                `Error creating settings.json in .vscode directory`
+                "Error creating settings.json in .vscode directory"
               );
               throw err;
             }
@@ -130,12 +114,10 @@ export function createPluginSettingsJson(): void {
     });
 }
 
-/* --------------------
- * Create vc setting.json directory
- */
 export function createVscodeSettingJson(): void {
-  let noticeText: string = `No 'vscode/settings.json' has been found, would you like to create now`;
-  let grantedText: string = "Yes, Create File";
+  const noticeText =
+    "No 'vscode/settings.json' has been found, would you like to create now";
+  const grantedText = "Yes, Create File";
 
   vscode.window
     .showInformationMessage(noticeText, grantedText)
@@ -147,7 +129,7 @@ export function createVscodeSettingJson(): void {
           fs.writeFile(info["full"], `{}`, (err) => {
             if (err) {
               vscode.window.showInformationMessage(
-                `Error creating settings.json in .vscode directory`
+                "Error creating settings.json in .vscode directory"
               );
               throw err;
             }
@@ -157,8 +139,6 @@ export function createVscodeSettingJson(): void {
     });
 }
 
-/* --------------------
- */
 export function fileExists(filePath = "") {
   return fs.existsSync(filePath);
 }

@@ -34,7 +34,7 @@ export class Workspaces {
   public create(
     name: string | null = null,
     excludedItems: any = null,
-    path: string = "global"
+    path = "global"
   ) {
     if (name && excludedItems) {
       const workspace: Workspace = this.buildWorkspace(
@@ -42,6 +42,7 @@ export class Workspaces {
         path,
         excludedItems
       );
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       this.store.addItem(workspace.id, workspace).then((workspaces: any) => {});
     }
   }
@@ -50,6 +51,7 @@ export class Workspaces {
    * Removes a given workspace by id
    */
   public removeById(id: string | null = null) {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     this.store.removeItem(id).then(() => {});
   }
 
@@ -58,7 +60,7 @@ export class Workspaces {
    */
   protected buildWorkspace(
     name: string,
-    path: string = "global",
+    path = "global",
     items: any = {}
   ): Workspace {
     return {
@@ -73,7 +75,7 @@ export class Workspaces {
    * Create id
    */
   private guidGenerator(): string {
-    var S4 = function () {
+    const S4 = function () {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
     };
     return S4() + "-" + S4();

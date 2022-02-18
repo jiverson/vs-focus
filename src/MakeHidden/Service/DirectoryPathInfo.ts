@@ -13,13 +13,13 @@ export interface DirectoryPathInfo {
 export function DirectoryPathInfo(
   givenPath: string | null = null
 ): DirectoryPathInfo {
-  let extension: string = path.extname(givenPath as string);
-  let pathName: string = path.basename(givenPath as string);
+  const extension = path.extname(givenPath as string);
+  const pathName = path.basename(givenPath as string);
   return {
     basename: pathName,
     filename:
       extension === "" ? pathName : pathName.slice(0, -extension.length),
-    extension: extension,
+    extension,
     path: givenPath?.slice(0, -pathName.length) ?? "",
   };
 }
