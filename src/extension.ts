@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as Util from "./MakeHidden/utilities";
-import * as fs from "fs";
+import { Stats } from "fs";
+import * as fs from "fs/promises";
 import * as path from "path";
 import ExcludeItems from "./MakeHidden/Classes/ExcludeItems/ExcludeItems.class";
 import {
@@ -26,80 +27,78 @@ export function activate(context: vscode.ExtensionContext) {
   /* --------------------
    * Hide Cmd's
    */
-  ["hide", "hideMany", "showOnly"].forEach((cmd: string) => {
+  ["hide", "hideMany", "showOnly"].forEach((cmd) => {
     const registerCommand = vscode.commands.registerCommand(
       `make-hidden.${cmd}`,
-      (e: { fsPath: string }) => {
-        if (!settingsFileExists() && !e.fsPath) {
+      async (uri: vscode.Uri) => {
+        if (
+          (!settingsFileExists() && !uri.fsPath) ||
+          !workspaceFolders?.length
+        ) {
           return;
         }
 
-        const chosenFilePath = e.fsPath;
+        let stats: Stats;
 
-        fs.lstat(chosenFilePath, (err, stats) => {
-          if (err || !workspaceFolders?.length) {
-            return;
+        try {
+          stats = await fs.lstat(uri.fsPath);
+        } catch (error) {
+          console.log(error);
+          return;
+        }
+
+        const {
+          uri: { path: rootPath },
+        } = workspaceFolders[0];
+
+        const relativePath = path.relative(rootPath, uri.fsPath);
+        const fileName = path.basename(uri.fsPath);
+        const extension = path.extname(fileName);
+        const file = path.basename(fileName, extension);
+
+        switch (cmd) {
+          case "hide": {
+            excludeItems.hide(relativePath);
+            break;
           }
 
-          const {
-            uri: { path: rootPath },
-          } = workspaceFolders[0];
+          case "hideMany": {
+            const hideByOptions = [`By Name: ${file}`];
 
-          const relativePath = path.relative(rootPath, chosenFilePath);
-          const fileName = path.basename(e.fsPath);
-          const extension = path.extname(fileName);
-          const file = path.basename(fileName, extension);
-
-          switch (cmd) {
-            case "hide": {
-              excludeItems.hide(relativePath);
-              break;
+            if (stats.isFile()) {
+              hideByOptions.push(`By Extension: ${extension}`);
             }
 
-            case "hideMany": {
-              const hideByOptions = [`By Name: ${file}`];
+            // Allow matching extension on files
+            const hideLevelOptions = [
+              `From root`,
+              `From current directory`,
+              `From current & child directories`,
+              `Child directories only`,
+            ];
 
-              if (stats.isFile()) {
-                hideByOptions.push(`By Extension: ${extension}`);
-              }
+            const hideBySelection = await vscode.window.showQuickPick(
+              hideByOptions
+            );
+            const hideByType =
+              hideByOptions.indexOf(hideBySelection as string) > 0;
 
-              // Allow matching extension on files
-              const hideLevelOptions = [
-                `From root`,
-                `From current directory`,
-                `From current & child directories`,
-                `Child directories only`,
-              ];
+            const hideLevelOption = await vscode.window.showQuickPick(
+              hideLevelOptions
+            );
+            const hideLevelIndex = hideLevelOptions.indexOf(
+              hideLevelOption as string
+            );
 
-              vscode.window
-                .showQuickPick(hideByOptions)
-                .then((hideBySelection?: string) => {
-                  const hideByType =
-                    hideByOptions.indexOf(hideBySelection as string) > 0;
-
-                  vscode.window
-                    .showQuickPick(hideLevelOptions)
-                    .then((val?: string) => {
-                      const hideLevelIndex = hideLevelOptions.indexOf(
-                        val as string
-                      );
-                      excludeItems.hideMany(
-                        relativePath,
-                        hideByType,
-                        hideLevelIndex
-                      );
-                    });
-                });
-
-              break;
-            }
-
-            case "showOnly": {
-              excludeItems.showOnly(relativePath);
-              break;
-            }
+            excludeItems.hideMany(relativePath, hideByType, hideLevelIndex);
+            break;
           }
-        });
+
+          case "showOnly": {
+            excludeItems.showOnly(relativePath);
+            break;
+          }
+        }
       }
     );
 
@@ -109,163 +108,138 @@ export function activate(context: vscode.ExtensionContext) {
   /* --------------------
    * Show Cmd's
    */
-  ["removeSearch", "removeItem", "removeAllItems", "undo"].forEach(
-    (cmd: string) => {
-      const registerCommand = vscode.commands.registerCommand(
-        `make-hidden.${cmd}`,
-        (excludeString: string) => {
-          switch (cmd) {
-            case "removeSearch": {
-              excludeItems.getHiddenItemList().then((excludeList: any) => {
-                vscode.window
-                  .showQuickPick(excludeList)
-                  .then((excludeString?: string) => {
-                    if (excludeString) {
-                      excludeItems.makeVisible(excludeString);
-                      // TODO: Don't like this fix as it runs before promise showing old list
-                      setTimeout(
-                        () =>
-                          vscode.commands.executeCommand(
-                            "make-hidden.removeSearch"
-                          ),
-                        500
-                      );
-                    }
-                  });
-              });
-              break;
+  ["removeSearch", "removeItem", "removeAllItems", "undo"].forEach((cmd) => {
+    const registerCommand = vscode.commands.registerCommand(
+      `make-hidden.${cmd}`,
+      async (item: string) => {
+        switch (cmd) {
+          case "removeSearch": {
+            const excludeList = await excludeItems.getHiddenItemList();
+            const excluded = await vscode.window.showQuickPick(excludeList);
+
+            if (!excluded) {
+              return;
             }
 
-            case "removeItem": {
-              if (
-                typeof excludeString === "string" &&
-                excludeString.length > 0
-              ) {
-                excludeItems.makeVisible(excludeString);
-              }
-              break;
-            }
+            excludeItems.makeVisible(excluded);
 
-            case "removeAllItems": {
-              excludeItems.showAllItems();
-              break;
-            }
+            setTimeout(
+              () => vscode.commands.executeCommand("make-hidden.removeSearch"),
+              500
+            );
+            break;
+          }
 
-            case "undo": {
-              excludeItems.undo();
-              break;
+          case "removeItem": {
+            if (typeof item === "string" && item.length > 0) {
+              excludeItems.makeVisible(item);
             }
+            break;
+          }
+
+          case "removeAllItems": {
+            excludeItems.showAllItems();
+            break;
+          }
+
+          case "undo": {
+            excludeItems.undo();
+            break;
           }
         }
-      );
+      }
+    );
 
-      context.subscriptions.push(registerCommand);
-    }
-  );
+    context.subscriptions.push(registerCommand);
+  });
 
   /* --------------------
    * Workspace Cmd's
    */
-  ["workspace.create", "workspace.load", "workspace.delete"].forEach(
-    (cmd: string) => {
-      const registerCommand = vscode.commands.registerCommand(
-        `make-hidden.${cmd}`,
-        () => {
-          if (!pluginSettingsJson()) {
-            return;
+  ["workspace.create", "workspace.load", "workspace.delete"].forEach((cmd) => {
+    const registerCommand = vscode.commands.registerCommand(
+      `make-hidden.${cmd}`,
+      async () => {
+        if (!pluginSettingsJson()) {
+          return;
+        }
+
+        const workspaces = await workspaceManager.getWorkspaces();
+        const workspaceIds = Object.keys(workspaces);
+        const workspacesNames: string[] = [];
+
+        workspaceIds.map((id) => {
+          const workspace: Workspace = workspaces[id as any];
+          const path = workspace.path;
+
+          // eslint-disable-next-line eqeqeq
+          if (path == null || path == Util.getVsCodeCurrentPath()) {
+            const label: string =
+              `${workspace.name}` + (path === null ? " •" : "");
+            workspacesNames.push(label);
+          }
+        });
+        workspacesNames.push("Close");
+
+        switch (cmd) {
+          case "workspace.create": {
+            const choice = await vscode.window.showQuickPick([
+              "Globally",
+              "Current working directory",
+              "Close",
+            ]);
+            if (choice === undefined || choice === "Close") {
+              return;
+            }
+
+            const workspaceName = await vscode.window.showInputBox({
+              prompt: "Name of Workspace",
+            });
+            if (workspaceName === undefined) {
+              return;
+            }
+
+            const excludedItems = await excludeItems.getHiddenItemList();
+            const type: string | null | undefined =
+              choice === "Globally" ? null : Util.getVsCodeCurrentPath();
+            workspaceManager.create(
+              workspaceName,
+              excludedItems,
+              type as string
+            );
+            break;
           }
 
-          workspaceManager.getWorkspaces().then((workspaces: Workspace[]) => {
-            const workspaceIds: string[] = Object.keys(workspaces);
-            const workspacesNames: string[] = [];
-
-            workspaceIds.map((id: string) => {
-              const workspace: Workspace = workspaces[id as any];
-              const path: string = workspace.path;
-
-              // eslint-disable-next-line eqeqeq
-              if (path == null || path == Util.getVsCodeCurrentPath()) {
-                const label: string =
-                  `${workspace.name}` + (path === null ? " •" : "");
-                workspacesNames.push(label);
-              }
-            });
-            workspacesNames.push("Close");
-
-            switch (cmd) {
-              case "workspace.create": {
-                vscode.window
-                  .showQuickPick([
-                    "Globally",
-                    "Current working directory",
-                    "Close",
-                  ])
-                  .then((choice) => {
-                    if (choice === "Close" || choice === undefined) {
-                      return;
-                    }
-                    vscode.window
-                      .showInputBox({ prompt: "Name of Workspace" })
-                      .then((workspaceName?: string) => {
-                        if (workspaceName === undefined) {
-                          return;
-                        }
-                        excludeItems
-                          .getHiddenItemList()
-                          .then((excludeItems: string[]) => {
-                            const type: string | null | undefined =
-                              choice === "Globally"
-                                ? null
-                                : Util.getVsCodeCurrentPath();
-                            workspaceManager.create(
-                              workspaceName,
-                              excludeItems,
-                              type as string
-                            );
-                          });
-                      });
-                  });
-                break;
-              }
-
-              case "workspace.load": {
-                vscode.window
-                  .showQuickPick(workspacesNames)
-                  .then((val?: string) => {
-                    if (val === "Close" || val === undefined) {
-                      return;
-                    }
-                    const chosenWorkspaceId =
-                      workspaceIds[workspacesNames.indexOf(val)];
-                    const chosenWorkspace =
-                      workspaces[chosenWorkspaceId as any];
-                    excludeItems.loadExcludedList(
-                      chosenWorkspace["excludedItems"]
-                    );
-                  });
-                break;
-              }
-
-              case "workspace.delete": {
-                vscode.window
-                  .showQuickPick(workspacesNames)
-                  .then((val?: string) => {
-                    if (val === "Close" || val === undefined) {
-                      return;
-                    }
-                    const chosenWorkspaceId =
-                      workspaceIds[workspacesNames.indexOf(val)];
-                    workspaceManager.removeById(chosenWorkspaceId);
-                  });
-                break;
-              }
+          case "workspace.load": {
+            const val = await vscode.window.showQuickPick(workspacesNames);
+            if (val === undefined || val === "Close") {
+              return;
             }
-          });
+
+            const chosenWorkspaceId =
+              workspaceIds[workspacesNames.indexOf(val)];
+            const chosenWorkspace = workspaces[chosenWorkspaceId as any];
+            excludeItems.loadExcludedList(chosenWorkspace["excludedItems"]);
+            break;
+          }
+
+          case "workspace.delete": {
+            const val = await vscode.window.showQuickPick(workspacesNames);
+            if (val === undefined || val === "Close") {
+              return;
+            }
+
+            const chosenWorkspaceId =
+              workspaceIds[workspacesNames.indexOf(val)];
+            workspaceManager.removeById(chosenWorkspaceId);
+            break;
+          }
         }
-      );
-      context.subscriptions.push(registerCommand);
-    }
-  );
+      }
+    );
+
+    context.subscriptions.push(registerCommand);
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
